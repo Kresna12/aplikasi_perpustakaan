@@ -1,10 +1,13 @@
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 /*
@@ -56,7 +59,7 @@ public class peminjam extends javax.swing.JFrame {
         jSeparator4 = new javax.swing.JSeparator();
         jScrollPane2 = new javax.swing.JScrollPane();
         t_peminjam = new javax.swing.JTable();
-        jButton1 = new javax.swing.JButton();
+        btnrefresh = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
         jButton3 = new javax.swing.JButton();
         jButton4 = new javax.swing.JButton();
@@ -66,6 +69,7 @@ public class peminjam extends javax.swing.JFrame {
         pelajaran = new javax.swing.JRadioButton();
         novel = new javax.swing.JRadioButton();
         komik = new javax.swing.JRadioButton();
+        jButton5 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(null);
@@ -99,14 +103,14 @@ public class peminjam extends javax.swing.JFrame {
         txtjudul.setBounds(40, 440, 160, 30);
 
         jLabel3.setFont(new java.awt.Font("Swis721 BT", 1, 14)); // NOI18N
-        jLabel3.setText("Judul Buku");
+        jLabel3.setText("Jenis Buku");
         getContentPane().add(jLabel3);
         jLabel3.setBounds(40, 340, 100, 18);
 
         jLabel4.setFont(new java.awt.Font("Swis721 Hv BT", 1, 24)); // NOI18N
         jLabel4.setText("Daftar Peminjaman dan Pengembalian Buku");
         getContentPane().add(jLabel4);
-        jLabel4.setBounds(110, 20, 650, 40);
+        jLabel4.setBounds(260, 10, 650, 40);
         getContentPane().add(jSeparator1);
         jSeparator1.setBounds(0, 62, 1070, 10);
 
@@ -145,7 +149,7 @@ public class peminjam extends javax.swing.JFrame {
         getContentPane().add(jLabel7);
         jLabel7.setBounds(40, 540, 160, 18);
         getContentPane().add(jSeparator2);
-        jSeparator2.setBounds(300, 60, 50, 10);
+        jSeparator2.setBounds(300, 60, 0, 2);
 
         txtalamat.setColumns(20);
         txtalamat.setRows(5);
@@ -159,9 +163,9 @@ public class peminjam extends javax.swing.JFrame {
         getContentPane().add(jLabel8);
         jLabel8.setBounds(40, 150, 100, 18);
         getContentPane().add(jSeparator3);
-        jSeparator3.setBounds(270, 60, 50, 10);
+        jSeparator3.setBounds(270, 60, 0, 2);
         getContentPane().add(jSeparator4);
-        jSeparator4.setBounds(260, 70, 50, 10);
+        jSeparator4.setBounds(260, 70, 0, 2);
 
         t_peminjam.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -182,6 +186,11 @@ public class peminjam extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
+        t_peminjam.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                t_peminjamMouseClicked(evt);
+            }
+        });
         jScrollPane2.setViewportView(t_peminjam);
         if (t_peminjam.getColumnModel().getColumnCount() > 0) {
             t_peminjam.getColumnModel().getColumn(0).setResizable(false);
@@ -197,9 +206,14 @@ public class peminjam extends javax.swing.JFrame {
         getContentPane().add(jScrollPane2);
         jScrollPane2.setBounds(240, 150, 810, 500);
 
-        jButton1.setText("Print");
-        getContentPane().add(jButton1);
-        jButton1.setBounds(750, 100, 100, 30);
+        btnrefresh.setText("Refresh");
+        btnrefresh.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnrefreshActionPerformed(evt);
+            }
+        });
+        getContentPane().add(btnrefresh);
+        btnrefresh.setBounds(880, 100, 100, 30);
 
         jButton2.setText("Save");
         jButton2.addActionListener(new java.awt.event.ActionListener() {
@@ -240,7 +254,7 @@ public class peminjam extends javax.swing.JFrame {
         buttonGroup2.add(pelajaran);
         pelajaran.setText("Pelajaran");
         getContentPane().add(pelajaran);
-        pelajaran.setBounds(110, 380, 93, 23);
+        pelajaran.setBounds(130, 380, 93, 23);
 
         buttonGroup2.add(novel);
         novel.setText("Novel");
@@ -255,7 +269,16 @@ public class peminjam extends javax.swing.JFrame {
             }
         });
         getContentPane().add(komik);
-        komik.setBounds(40, 390, 53, 23);
+        komik.setBounds(40, 390, 70, 23);
+
+        jButton5.setText("Print");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
+        getContentPane().add(jButton5);
+        jButton5.setBounds(750, 100, 100, 30);
 
         setBounds(0, 0, 1086, 721);
     }// </editor-fold>//GEN-END:initComponents
@@ -277,7 +300,20 @@ public class peminjam extends javax.swing.JFrame {
     }//GEN-LAST:event_rdbkActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        // TODO add your handling code here:
+           int baris = t_peminjam.getSelectedRow();
+        if (baris != -1) {
+            String no = t_peminjam.getValueAt(baris, 0).toString();
+            String SQL = "DELETE FROM tb_pinjam WHERE No='"+no+"'";
+            int status = KoneksiDB.execute(SQL);
+            if (status==1) {
+                JOptionPane.showMessageDialog(this, "Data berhasil dihapus","Sukses", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Data gagal dihapus","Gagal",JOptionPane.WARNING_MESSAGE);
+            }
+        }else{
+            JOptionPane.showMessageDialog(this, "Pilih Baris Data Terlebih Dahulu", "Error", JOptionPane.WARNING_MESSAGE);
+        }
+        
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
@@ -295,11 +331,8 @@ public class peminjam extends javax.swing.JFrame {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-ddd");
         String Pinjam = dateFormat.format(txtpinjam.getDate());
         String Kembali = dateFormat.format(txtkembali.getDate());
-        if ("".equals(txtno.getText()) || "".equals(txtnama.getText()) || "".equals(txtalamat.getText()) || Pinjam.equals("")  || Kembali.equals("")) {
-            JOptionPane.showMessageDialog(this, "Harap Lengkapi Data", "Error", JOptionPane.WARNING_MESSAGE);
-        } else{
-            String ST = "";
-            String JB = "";
+        String ST = "";
+        String JB = ""; 
             if (rdk.isSelected()) {
                 ST = "Kembali";
             }else{
@@ -310,17 +343,9 @@ public class peminjam extends javax.swing.JFrame {
             }else if(novel.isSelected()){
                 JB = "novel";
             }else{
-                JB = "komik";
-            }
-                    
-            String SQL = "INSERT INTO `tb_pinjam`(`No`, `nama`, `alamat`, `jenis_buku`, `judul`, `pinjam`, `kembali`, `status')"
-                    + "VALUES('"+txtno.getText()
-                    +"','"+txtnama.getText()
-                    +"','"+txtalamat.getText()
-                    +"','"+JB
-                    +"','"+txtjudul.getText()+"','"+Pinjam
-                    +"','"+Kembali
-                    +"','"+ST+"')";
+                JB = "komik";          
+            }    
+            String SQL = "INSERT INTO tb_pinjam(No, nama, alamat, jenis_buku, judul, pinjam, kembali, status) VALUES ("+txtno.getText()+",'"+txtnama.getText()+"','"+txtalamat.getText()+"','"+JB+"','"+txtjudul.getText()+"','"+Pinjam+"','"+Kembali+"','"+ST+"');";
             int status = KoneksiDB.execute(SQL);
             if (status == 1) {
                 JOptionPane.showMessageDialog(this, "Data berhasil ditambahkan", "Sukses", JOptionPane.INFORMATION_MESSAGE);
@@ -328,12 +353,31 @@ public class peminjam extends javax.swing.JFrame {
             } else {
                 JOptionPane.showMessageDialog(this, "Data Gagal Ditambahkan", "Sukses", JOptionPane.WARNING_MESSAGE);
             }
-        }
+        
+        
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void komikActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_komikActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_komikActionPerformed
+
+    private void t_peminjamMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_t_peminjamMouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_t_peminjamMouseClicked
+
+    private void btnrefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnrefreshActionPerformed
+       selectData();
+    }//GEN-LAST:event_btnrefreshActionPerformed
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        MessageFormat header = new MessageFormat("Biodata Siswa SMK Telkom Malang");
+        MessageFormat footer = new MessageFormat("Page{0,number,integer}        ");
+        try {
+            t_peminjam.print(JTable.PrintMode.FIT_WIDTH, header, footer, true, null, true, null);
+        } catch(java.awt.print.PrinterException e) {
+            System.err.format("Cannot print %s%n", e.getMessage());
+        }
+    }//GEN-LAST:event_jButton5ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -371,12 +415,13 @@ public class peminjam extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnrefresh;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.ButtonGroup buttonGroup2;
-    private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
+    private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -434,7 +479,7 @@ public class peminjam extends javax.swing.JFrame {
                     status = "belum kembali";
                 }
                 
-                String data[] = {No,nama,jenis_buku,judul,pinjam,kembali,status};
+                String data[] = {No,nama,alamat,jenis_buku,judul,pinjam,kembali,status};
                 dtm.addRow(data);
             }
         } catch (SQLException ex) {

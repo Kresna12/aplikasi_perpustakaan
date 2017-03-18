@@ -1,3 +1,10 @@
+
+import com.mysql.jdbc.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import javax.swing.JOptionPane;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -28,13 +35,19 @@ public class home extends javax.swing.JFrame {
 
         tfusername = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
-        tfpassword = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
         btnreset = new javax.swing.JButton();
         btnlogin = new javax.swing.JButton();
+        tfpassword = new javax.swing.JPasswordField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setLayout(null);
+
+        tfusername.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tfusernameActionPerformed(evt);
+            }
+        });
         getContentPane().add(tfusername);
         tfusername.setBounds(120, 80, 170, 40);
 
@@ -42,8 +55,6 @@ public class home extends javax.swing.JFrame {
         jLabel1.setText("Username");
         getContentPane().add(jLabel1);
         jLabel1.setBounds(160, 50, 100, 23);
-        getContentPane().add(tfpassword);
-        tfpassword.setBounds(120, 170, 170, 40);
 
         jLabel2.setFont(new java.awt.Font("Sitka Text", 1, 18)); // NOI18N
         jLabel2.setText("Password");
@@ -67,6 +78,8 @@ public class home extends javax.swing.JFrame {
         });
         getContentPane().add(btnlogin);
         btnlogin.setBounds(40, 240, 130, 30);
+        getContentPane().add(tfpassword);
+        tfpassword.setBounds(120, 160, 170, 40);
 
         setBounds(0, 0, 416, 339);
     }// </editor-fold>//GEN-END:initComponents
@@ -77,17 +90,31 @@ public class home extends javax.swing.JFrame {
     }//GEN-LAST:event_btnresetActionPerformed
 
     private void btnloginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnloginActionPerformed
-         if(tfusername.getText().trim().equals("admin") )
-{
-            javax.swing.JOptionPane.showMessageDialog(null, "Selamat Datang admin");
-            new peminjam().setVisible(true);
-        }else{
-            javax.swing.JOptionPane.showMessageDialog(null, "username yang anda masukkan salah");
-            return;
+ Connection connection;
+        PreparedStatement ps;
+        try {
+            connection = (Connection) DriverManager.getConnection("jdbc:mysql://localhost:3306/db_perpus?zeroDateTimeBehavior=convertToNull", "root", "");
+            ps = connection.prepareStatement("SELECT * FROM `tb_admin` WHERE username = ? AND password = ?");
+            ps.setString(1, tfusername.getText());
+            ps.setString(2, tfpassword.getText());
+            ResultSet result = ps.executeQuery();
+            if (result.next()) {
+                new peminjam().show();
+                this.dispose();
+            }
+            else {
+                JOptionPane.showMessageDialog(rootPane, "Username atau Password salah !");
+                tfpassword.setText("");
+                tfusername.requestFocus();
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(rootPane, "gagal");
         }
-         
-        this.dispose(); 
     }//GEN-LAST:event_btnloginActionPerformed
+
+    private void tfusernameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfusernameActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_tfusernameActionPerformed
 
     /**
      * @param args the command line arguments
@@ -129,7 +156,7 @@ public class home extends javax.swing.JFrame {
     private javax.swing.JButton btnreset;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JTextField tfpassword;
+    private javax.swing.JPasswordField tfpassword;
     private javax.swing.JTextField tfusername;
     // End of variables declaration//GEN-END:variables
 }
